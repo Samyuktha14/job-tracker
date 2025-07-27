@@ -1,0 +1,61 @@
+# ===== Global =====
+node_modules/
+*.log
+.env
+.env.local
+.DS_Store
+Thumbs.db
+
+# ===== Java / Spring Boot =====
+target/
+*.class
+*.jar
+*.war
+*.iml
+*.ipr
+*.iws
+
+# IDE Settings
+.idea/
+.vscode/
+*.sw?
+
+# Eclipse / IntelliJ / NetBeans
+*.classpath
+*.project
+*.settings/
+.nb-gradle/
+nbbuild/
+dist/
+nbdist/
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Gradle
+.gradle/
+build/
+
+# Firebase Service Account (VERY IMPORTANT)
+**/firebase-service-account.json
+
+# Application properties
+**/application.properties
+
+# Logs
+logs/
+
+# Uploaded files
+jobtracker/uploads/
+
+# ========== React (Frontend) ==========  
+jobtracker-frontend/node_modules/
+jobtracker-frontend/build/
+jobtracker-frontend/.vite/
+
+# ========== Spring Boot (Backend) ==========  
+jobtracker/target/
+jobtracker/src/main/resources/firebase-service-account.json
+jobtracker/src/main/resources/application.properties
