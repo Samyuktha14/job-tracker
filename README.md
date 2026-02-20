@@ -1,33 +1,63 @@
-# Job Tracker
+#  JobTracker
 
-📌 **A web application to track your job applications**  
-Track the status of your applications and stay organized during your job search journey.  
+A full-stack job application management system with secure authentication and automated Telegram reminders.
 
----
-
-## 🛠️ Tech Stack
-- **Frontend:** HTML, CSS, React.js  
-- **Backend:** Spring Boot  
-- **Database:** MySQL  
-- **Testing Tools:** Postman  
-- **Version Control:** Git, GitHub  
+Built using **Spring Boot + React + MySQL + Firebase + Telegram Bot API**.
 
 ---
 
-## ⚡ Features
-- Add, update, and delete job applications  
-- Track application status (Applied, Interview, Offer, Rejected)  
-- Search and filter applications  
-- User authentication (login/signup)  
-- **Upcoming:** Reminder notifications and stats/analytics  
+##  Features
+
+- Manage job applications (Create, Update, Delete)
+-  Track application status, interview rounds & stages
+-  Schedule next actions (Interview, Follow-up, Assignment)
+- Automated Telegram reminders via secure webhook
+-  Firebase JWT-based authentication
+-  Webhook secret validation for Telegram integration
+-  Background scheduler for real-time notifications
+-  Clean layered architecture (Controller → Service → Repository)
 
 ---
 
-## 🔮 Planned Features / Future Enhancements
+##  Tech Stack
 
-| Feature | Why it's Useful |
-|---------|----------------|
-| ⏰ **Reminder System** | Helps users remember follow-ups and deadlines. Will be added after the first version. |
-| 📊 **Stats / Analytics** | Provides insights on applications (like status breakdown). Nice UI enhancement, optional for V1. |
+### Backend
+- Java 24
+- Spring Boot 3
+- Spring Security
+- Spring Data JPA
+- Hibernate
+- MySQL
+
+### Frontend
+- React
+- Axios
+- Context API
+- Tailwind CSS
+
+### Integrations
+- Firebase Authentication
+- Telegram Bot API (secure token-based linking)
+- ngrok (development webhook testing)
 
 ---
+
+##  Telegram Integration Flow
+
+1. User generates secure link token  
+2. Telegram `/start <token>` links account  
+3. Chat ID stored securely in database  
+4. Background scheduler sends automated reminders  
+
+---
+
+##  Architecture Highlights
+
+- Token-based Telegram linking (10-minute expiry)
+- Unique Telegram chat ID enforcement
+- Hard delete for job applications
+- Soft delete for users
+- Global exception handling
+- Composite DB index for reminder performance
+- Secure webhook using secret header validation
+
