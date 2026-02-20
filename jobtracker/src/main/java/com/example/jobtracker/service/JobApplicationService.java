@@ -1,105 +1,140 @@
 package com.example.jobtracker.service;
 
-import com.example.jobtracker.model.JobApplication;
-import com.example.jobtracker.repository.JobApplicationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.*;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.List;
-//import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import com.example.jobtracker.exception.ResourceNotFoundException;
+import com.example.jobtracker.model.JobApplication;
+import com.example.jobtracker.repository.JobApplicationRepository;
 
 @Service
 public class JobApplicationService {
 
     @Autowired
-    private JobApplicationRepository repository;
+    private JobApplicationRepository jobRepository;
 
-    // 🔍 Admin-only (optional, not used in user-side fetch)
+    // ===============================
+    // ADMIN
+    // ===============================
+
     public List<JobApplication> getAllJobs() {
-        return repository.findAll(Sort.by(Sort.Direction.DESC, "appliedDate"));
+        return jobRepository.findAll(
+                Sort.by(Sort.Direction.DESC, "appliedDate")
+        );
     }
 
-    // 🔎 Get by ID (used for update, delete)
+    public Page<JobApplication> getAllJobsPaged(Pageable pageable) {
+        return jobRepository.findAll(pageable);
+    }
+
+    // ===============================
+    // BASIC
+    // ===============================
+
     public JobApplication getJobById(Long id) {
-       return repository.findById(id)
-    .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
-
+        return jobRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Job not found: " + id)
+                );
     }
 
-    // ➕ Create new job
+    // ===============================
+    // CREATE
+    // ===============================
+
     public JobApplication createJob(JobApplication job) {
-        return repository.save(job);
+        job.setReminderSent(false);
+        job.setReminderSentAt(null);
+        return jobRepository.save(job);
     }
 
-    // ✏️ Update job (already authorized in controller)
-    public JobApplication updateJob(Long id, JobApplication updatedJob) {
-        JobApplication existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
+    // ===============================
+    // UPDATE
+    // ===============================
 
-        existing.setCompanyName(updatedJob.getCompanyName());
-        existing.setRole(updatedJob.getRole());
-        existing.setAppliedDate(updatedJob.getAppliedDate());
-        existing.setApplicationStatus(updatedJob.getApplicationStatus());
-        existing.setReminderDate(updatedJob.getReminderDate());
-        existing.setNotes(updatedJob.getNotes());
-        existing.setCurrentStage(updatedJob.getCurrentStage());
-        existing.setCurrentRound(updatedJob.getCurrentRound());
-        existing.setTotalRounds(updatedJob.getTotalRounds());
-        existing.setSource(updatedJob.getSource());
-        existing.setResumeFileName(updatedJob.getResumeFileName());
+    public JobApplication updateJob(Long id, JobApplication updated) {
 
-        // 🎯 Rejection logic
-        if (!"Rejected".equalsIgnoreCase(updatedJob.getApplicationStatus())) {
-            existing.setRejectionDate(null);
+        JobApplication existing = getJobById(id);
+
+        existing.setCompanyName(updated.getCompanyName());
+        existing.setRole(updated.getRole());
+        existing.setAppliedDate(updated.getAppliedDate());
+        existing.setApplicationStatus(updated.getApplicationStatus());
+        existing.setNotes(updated.getNotes());
+        existing.setCurrentStage(updated.getCurrentStage());
+        existing.setCurrentRound(updated.getCurrentRound());
+        existing.setTotalRounds(updated.getTotalRounds());
+        existing.setSource(updated.getSource());
+        existing.setResumeLink(updated.getResumeLink());
+        existing.setReapplyDate(updated.getReapplyDate());
+
+        existing.setNextActionType(updated.getNextActionType());
+        existing.setNextActionAt(updated.getNextActionAt());
+        existing.setReminderSent(false);
+        existing.setReminderSentAt(null);
+
+        if ("Rejected".equalsIgnoreCase(updated.getApplicationStatus())) {
+            existing.setRejectionDate(
+                    updated.getRejectionDate() != null
+                            ? updated.getRejectionDate()
+                            : LocalDate.now()
+            );
         } else {
-            if (updatedJob.getRejectionDate() != null) {
-                existing.setRejectionDate(updatedJob.getRejectionDate()); // ✅ Use custom date if available
-            } else {
-                existing.setRejectionDate(LocalDate.now()); // fallback
-            }
+            existing.setRejectionDate(null);
         }
-        existing.setReapplyDate(null); // reserved for future use
 
-        return repository.save(existing);
+        return jobRepository.save(existing);
     }
 
-    // ❌ Delete job
+    // ===============================
+    // HARD DELETE
+    // ===============================
+
     public void deleteJob(Long id) {
-        repository.deleteById(id);
+        jobRepository.deleteById(id);
     }
 
-    // 🔁 Pagination without filtering (for admin or testing)
-    public Page<JobApplication> getJobs(Pageable pageable) {
-        return repository.findAll(pageable);
+    // ===============================
+    // QUERIES
+    // ===============================
+
+    public Page<JobApplication> getJobsByUser(String userId, Pageable p) {
+        return jobRepository.findByUserId(userId, p);
     }
 
-    // 🔍 Filter by status (all users — not ideal for prod)
-    public Page<JobApplication> getJobsByStatus(String status, Pageable pageable) {
-        return repository.findByApplicationStatusIgnoreCase(status, pageable);
+    public Page<JobApplication> getJobsByUserAndStatus(
+            String userId,
+            String status,
+            Pageable p
+    ) {
+        return jobRepository
+                .findByUserIdAndApplicationStatusIgnoreCase(
+                        userId, status, p);
     }
 
-    // 🔍 Search by company name (unfiltered)
-    public Page<JobApplication> searchByCompany(String company, Pageable pageable) {
-        return repository.findByCompanyNameContainingIgnoreCase(company, pageable);
+    public Page<JobApplication> searchByUserAndCompany(
+            String userId,
+            String company,
+            Pageable p
+    ) {
+        return jobRepository
+                .findByUserIdAndCompanyNameContainingIgnoreCase(
+                        userId, company, p);
     }
 
-    // ✅ Multi-user support methods
-    public Page<JobApplication> getJobsByUser(String userId, Pageable pageable) {
-        return repository.findByUserId(userId, pageable);
+    public Page<JobApplication> getJobsByStatus(String status, Pageable p) {
+        return jobRepository
+                .findByApplicationStatusIgnoreCase(status, p);
     }
 
-    public Page<JobApplication> getJobsByUserAndStatus(String userId, String status, Pageable pageable) {
-        return repository.findByUserIdAndApplicationStatusIgnoreCase(userId, status, pageable);
+    public Page<JobApplication> searchByCompany(String company, Pageable p) {
+        return jobRepository
+                .findByCompanyNameContainingIgnoreCase(company, p);
     }
-
-    public Page<JobApplication> searchByUserAndCompany(String userId, String company, Pageable pageable) {
-        return repository.findByUserIdAndCompanyNameContainingIgnoreCase(userId, company, pageable);
-    }
-
-    public JobApplication findByResumeFileName(String fileName) {
-    return repository.findByResumeFileName(fileName);
-}
-
 }

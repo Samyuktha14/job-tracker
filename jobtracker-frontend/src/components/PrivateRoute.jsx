@@ -1,14 +1,28 @@
 // src/components/PrivateRoute.jsx
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../firebase';
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const PrivateRoute = ({ children }) => {
-  const [user, loading] = useAuthState(auth);
+  const { firebaseUser, user, loading } = useAuth();
 
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
-  return user ? children : <Navigate to="/login" replace />;
+  if (loading) return null;
+
+  // Not logged in
+  if (!firebaseUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Email not verified
+  if (!firebaseUser.emailVerified) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Backend user missing
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
 };
 
 export default PrivateRoute;

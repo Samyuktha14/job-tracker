@@ -1,0 +1,22 @@
+# Maven
+/target/
+
+# IDE
+/.idea/
+/*.iml
+
+# OS
+.DS_Store
+
+# Env files
+.env
+.env.*
+application-prod.properties
+application-local.properties
+
+# Logs
+*.log
+
+# Firebase credentials
+src/main/resources/firebase-service-account.json
+firebase-service-account.json

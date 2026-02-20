@@ -1,17 +1,27 @@
 package com.example.jobtracker.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 
 public class FirebaseTokenVerifier {
 
-    public static FirebaseToken verify(String idToken) throws Exception {
+    private static final Logger logger =
+            LoggerFactory.getLogger(FirebaseTokenVerifier.class);
+
+    public static FirebaseToken verify(String idToken) {
+
         try {
-            return FirebaseAuth.getInstance().verifyIdToken(idToken);
-        } catch (Exception e) {
-            // Log a generic message (avoid printing token or stack trace in production)
-            System.out.println("❌ Firebase token verification failed.");
-            throw new Exception("Invalid or expired Firebase token");
+            return FirebaseAuth
+                    .getInstance()
+                    .verifyIdToken(idToken, true); // checks revoked tokens
+
+        } catch (FirebaseAuthException e) {
+            logger.warn("Invalid or expired Firebase token");
+            throw new RuntimeException("Invalid or expired Firebase token");
         }
     }
 }
