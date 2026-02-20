@@ -29,31 +29,24 @@ public class TelegramLinkService {
         this.telegramService = telegramService;
     }
 
-    // ===============================
-    //  Generate link token
-    // ===============================
-   public String generateLinkToken(String userId) {
+    @Transactional
+    public String generateLinkToken(String userId) {
 
-    // delete old tokens for this user
-    tokenRepository.deleteByUserId(userId);
+        tokenRepository.deleteByUserId(userId);
 
-    String token = UUID.randomUUID().toString();
+        String token = UUID.randomUUID().toString();
 
-    TelegramLinkToken linkToken = new TelegramLinkToken(
-            token,
-            userId,
-            LocalDateTime.now().plusMinutes(10)
-    );
+        TelegramLinkToken linkToken = new TelegramLinkToken(
+                token,
+                userId,
+                LocalDateTime.now().plusMinutes(10)
+        );
 
-    tokenRepository.save(linkToken);
+        tokenRepository.save(linkToken);
 
-    return token;
-}
+        return token;
+    }
 
-
-    // ===============================
-    //  Link Telegram chat_id
-    // ===============================
     @Transactional
     public void linkTelegramAccount(String token, Long chatId) {
 
@@ -70,18 +63,20 @@ public class TelegramLinkService {
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found"));
 
-       
-        // Link Telegram chat id to user
         user.setTelegramChatId(chatId);
         userRepository.save(user);
 
-        // Token should never be reused
         tokenRepository.delete(linkToken);
 
-        // Confirmation message to Telegram
         telegramService.sendMessage(
                 chatId,
                 "✅ Telegram linked successfully!\nYou will now receive job reminders here."
         );
     }
+    public void sendLinkInstruction(Long chatId) {
+    telegramService.sendMessage(
+        chatId,
+        "⚠️ Please click the link from the website to link your account."
+    );
+}
 }

@@ -14,7 +14,7 @@ const TelegramStatus = () => {
   const abortControllerRef = useRef(null);
   const timeoutRef = useRef(null);
 
-  const linked = !!user?.telegramChatId;
+  const linked = !!user?.telegramLinked;
 
   // ===============================
   // CLEANUP ON UNMOUNT (Modal Close)
@@ -63,7 +63,7 @@ const TelegramStatus = () => {
             signal: abortControllerRef.current.signal
           });
 
-          if (userRes.data.telegramChatId) {
+          if (userRes.data.telegramLinked) {
             await refreshUser();
             setWaitingForLink(false);
             toast.success("Telegram linked successfully!");
@@ -79,9 +79,9 @@ const TelegramStatus = () => {
           timeoutRef.current = setTimeout(poll, 3000);
 
         } catch (err) {
-          if (err.name !== "CanceledError") {
-            console.error("Polling failed:", err);
-            setWaitingForLink(false);
+         if (err.name !== "CanceledError") {
+        setWaitingForLink(false);
+        toast.error("Unable to verify Telegram link. Please try again.");
           }
         }
       };
